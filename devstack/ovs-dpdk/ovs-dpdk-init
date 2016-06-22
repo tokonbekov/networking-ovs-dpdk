@@ -27,6 +27,15 @@ is_ubuntu(){
     fi
 }
 
+is_xenial(){
+    ub_rel=$(lsb_release -c -s 2> /dev/null)
+    if [ "$ub_rel" == "xenial" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Print line number and "message" then exits with return value from $1
 # die "error_code" $LINENO "message"
 die() {
@@ -398,11 +407,17 @@ free_hugepages() {
     fi
 
     if is_ubuntu; then
-        restart_service libvirt-bin
+        if is_xenial; then
+         sudo systemctl stop libvirt-bin.socket
+         sudo systemctl stop libvirt-bin.service
+         sudo systemctl start libvirt-bin.socket
+         sudo systemctl start libvirt-bin.service
+        else
+           restart_service libvirt-bin
+        fi
     else
         restart_service libvirtd
     fi
-
 
 }
 
@@ -441,11 +456,20 @@ alloc_hugepages() {
             sudo mount -t hugetlbfs -o uid=$qemu_user_id,gid=$qemu_group_id  nodev $OVS_HUGEPAGE_MOUNT
         fi
     fi
+
     if is_ubuntu; then
-        restart_service libvirt-bin
+        if is_xenial; then
+         sudo systemctl stop libvirt-bin.socket
+         sudo systemctl stop libvirt-bin.service
+         sudo systemctl start libvirt-bin.socket
+         sudo systemctl start libvirt-bin.service
+        else
+           restart_service libvirt-bin
+        fi
     else
         restart_service libvirtd
     fi
+
 }
 
 get_ovs_status(){

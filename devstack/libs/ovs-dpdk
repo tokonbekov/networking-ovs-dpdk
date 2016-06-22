@@ -15,17 +15,40 @@ function _neutron_ovs_base_install_agent_packages {
 }
 fi
 
+function is_xenial(){
+    ub_rel=$(lsb_release -c -s 2> /dev/null)
+    if [ "$ub_rel" == "xenial" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+
 function start_ovs_dpdk {
     if [ -e /etc/init.d/ovs-dpdk ]; then
-        sudo service ovs-dpdk start
+        if is_xenial; then
+            sudo /etc/init.d/ovs-dpdk start
+        else
+            sudo service ovs-dpdk start
+        fi
     fi
 }
 
 function stop_ovs_dpdk {
     if [ -e /etc/init.d/ovs-dpdk ]; then
-        sudo service ovs-dpdk stop
+        if is_xenial; then
+            sudo /etc/init.d/ovs-dpdk stop
+        else
+            sudo service ovs-dpdk stop
+        fi
     fi
 }
+
+
+
+
+
 
 #
 # ovs initialisation
